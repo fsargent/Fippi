@@ -4,6 +4,8 @@ from Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 import pexpect
 import socket
 import time
+import sys
+import atexit
 
 stations = {
     "KEXP": "http://live-mp3-128.kexp.org:8000/listen.pls",
@@ -12,6 +14,18 @@ stations = {
     "Radio FIP": "http://audio.scdn.arkena.com/11016/fip-midfi128.mp3"
 }
 
+
+def cleanExit():
+    if lcd is not None:
+        time.sleep(0.5)
+        lcd.backlight(lcd.OFF)
+        lcd.clear()
+        lcd.stop()
+    if audio is not None:
+        audio.kill(0)
+
+
+atexit.register(cleanExit)
 
 lcd = Adafruit_CharLCDPlate()
 lcd.begin(16, 2)
@@ -70,19 +84,10 @@ while True:
     btnRight = b & (1 << lcd.RIGHT)
     btnSel = b & (1 << lcd.SELECT)
 
-    def playStream(station_name):
-        lcd.clear()
-        lcd.message(station_name)
-        lcd.backlight(lcd.GREEN)
-        audio = pexpect.spawn(
-            'sudo mplayer -quiet -playlist ' + stations[station_name])
-        # print audio
-        audio.logfile_read = log
-        print 'Playing ' + station_name
-
     if btnSel:
         if audio is not None:
-            audio.terminate()
+            audio.kill(0)
+            print "Killing audio"
         lcd.clear()
         lcd.message('Nighty Night!\n' + s.getsockname()[0])
         lcd.backlight(lcd.RED)
@@ -90,24 +95,54 @@ while True:
         lcd.backlight(lcd.OFF)
 
     elif btnUp:
+        station_name = "KEXP"
         if audio is not None:
-            audio.terminate()
-        playStream("KEXP")
+            audio.kill(0)
+            print "Killing audio"
+        lcd.clear()
+        lcd.message(station_name)
+        lcd.backlight(lcd.GREEN)
+        audio = pexpect.spawn('sudo mplayer -quiet -playlist ' +
+                              stations[station_name])
+        print audio
+        audio.logfile = sys.stdout
+        print 'Playing ' + station_name + ' at ' + stations[station_name]
 
     elif btnDown:
+        station_name = 'WFUV'
         if audio is not None:
-            audio.terminate()
+            audio.kill(0)
+            print "killing audio"
         lcd.clear()
-        playStream('WFUV')
+        lcd.message(station_name)
+        lcd.backlight(lcd.GREEN)
+        audio = pexpect.spawn('sudo mplayer -quiet -playlist ' +
+                              stations[station_name])
+        print audio
+        audio.logfile = sys.stdout
+        print 'Playing ' + station_name + ' at ' + stations[station_name]
 
     elif btnLeft:
+        station_name = 'TSF Jazz'
         if audio is not None:
-            audio.terminate()
+            audio.kill(0)
+            print "killing audio"
         lcd.clear()
-        playStream('TSF Jazz')
+        lcd.message(station_name)
+        lcd.backlight(lcd.GREEN)
+        audio = pexpect.spawn('sudo mplayer -quiet ' + stations[station_name])
+        audio.logfile = sys.stdout
+        print 'Playing ' + station_name + ' at ' + stations[station_name]
 
     elif btnRight:
+        station_name = 'Radio FIP'
         if audio is not None:
-            audio.terminate()
+            audio.kill(0)
+            print "killing audio"
         lcd.clear()
-        playStream('Radio FIP')
+        lcd.message(station_name)
+        lcd.backlight(lcd.GREEN)
+        audio = pexpect.spawn('sudo mplayer -quiet ' + stations[station_name])
+        print audio
+        audio.logfile = sys.stdout
+        print 'Playing ' + station_name + ' at ' + stations[station_name]
