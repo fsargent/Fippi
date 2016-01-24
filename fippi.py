@@ -22,7 +22,7 @@ def cleanExit():
         lcd.clear()
         lcd.stop()
     if audio is not None:
-        audio.kill(0)
+        audio.terminate()
 
 
 atexit.register(cleanExit)
@@ -85,19 +85,40 @@ while True:
     btnSel = b & (1 << lcd.SELECT)
 
     if btnSel:
-        if audio is not None:
-            audio.kill(0)
-            print "Killing audio"
-        lcd.clear()
-        lcd.message('Nighty Night!\n' + s.getsockname()[0])
-        lcd.backlight(lcd.RED)
-        time.sleep(5)
-        lcd.backlight(lcd.OFF)
+        t = time.time()                        # Start time of button press
+        while lcd.buttonPressed(lcd.SELECT):   # Wait for button release
+            if (time.time() - t) >= 3:  # Turn off if held for 5 seconds.
+                if audio is not None:
+                    audio.terminate()
+                    print "Killing audio"
+                lcd.clear()
+                lcd.message('Nighty Night!\n' + s.getsockname()[0])
+                lcd.backlight(lcd.RED)
+                time.sleep(5)
+                lcd.backlight(lcd.OFF)
+        # # A short press will fippi turn off in 30 minutes.
+        # sleeptime = t + 1800  # 30 minutes
+        # lcd.clear()
+        # lcd.message('Off in 30 min!\n ' + 
+        #             time.strftime('%I:%M:%S %p', time.localtime(sleeptime)))
+        # time.sleep(5)
+        # lcd.backlight(lcd.OFF)
+        # while True:
+        #     if time.time() >= sleeptime:
+        #         break
+        # if audio is not None:
+        #     audio.terminate()
+        #     print "Killing audio"
+        # lcd.clear()
+        # lcd.message('Nighty Night!\n' + s.getsockname()[0])
+        # lcd.backlight(lcd.RED)
+        # time.sleep(5)
+        # lcd.backlight(lcd.OFF)
 
     elif btnUp:
         station_name = "KEXP"
         if audio is not None:
-            audio.kill(0)
+            audio.terminate()
             print "Killing audio"
         lcd.clear()
         lcd.message(station_name)
@@ -111,8 +132,8 @@ while True:
     elif btnDown:
         station_name = 'WFUV'
         if audio is not None:
-            audio.kill(0)
-            print "killing audio"
+            audio.terminate()
+            print "Killing audio"
         lcd.clear()
         lcd.message(station_name)
         lcd.backlight(lcd.GREEN)
@@ -125,8 +146,8 @@ while True:
     elif btnLeft:
         station_name = 'TSF Jazz'
         if audio is not None:
-            audio.kill(0)
-            print "killing audio"
+            audio.terminate()
+            print "Killing audio"
         lcd.clear()
         lcd.message(station_name)
         lcd.backlight(lcd.GREEN)
@@ -137,8 +158,8 @@ while True:
     elif btnRight:
         station_name = 'Radio FIP'
         if audio is not None:
-            audio.kill(0)
-            print "killing audio"
+            audio.terminate()
+            print "Killing audio"
         lcd.clear()
         lcd.message(station_name)
         lcd.backlight(lcd.GREEN)
